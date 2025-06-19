@@ -1,36 +1,171 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔍 API Performance Monitor – Internship Assignment (DevifyX)
 
-## Getting Started
+A backend-only monitoring system that tracks latency, status codes, and errors of registered API endpoints. It provides metrics reports, alerting, rate limiting, and supports time-windowed queries.
 
-First, run the development server:
+> ✅ Built using **Next.js App Router**, **TypeScript**, **MongoDB**, and **JWT-based Authentication**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 📦 Tech Stack
+
+- **Runtime**: Node.js 18+
+- **Framework**: Next.js (App Router)
+- **Language**: TypeScript
+- **Database**: MongoDB + Mongoose
+- **Authentication**: JWT
+- **Rate Limiting**: IP-based, in-memory
+- **Validation**: Zod
+
+---
+
+## 📐 API Documentation
+
+### 🔑 Auth
+
+```
+POST /api/auth/login
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Body:**
+```json
+{
+  "email": "admin@example.com",
+  "password": "password123"
+}
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Response:**
+```json
+{
+  "token": "<jwt_token>"
+}
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+### 🧩 Register API Endpoint
 
-To learn more about Next.js, take a look at the following resources:
+```
+POST /api/endpoints/register
+Headers: Authorization: Bearer <token>
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Body:**
+```json
+{
+  "name": "User Service",
+  "url": "https://example.com/api/user",
+  "tags": ["user", "auth"]
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+✅ Automatically pings the endpoint once on registration  
+✅ Logs the latency and status code  
+✅ Triggers alert if latency > 300ms or status >= 500
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 📡 Ping an Endpoint
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+GET /api/ping/:id
+Headers: Authorization: Bearer <token>
+```
+
+Triggers a request to the registered URL and logs latency and status code.
+
+---
+
+### 📊 Aggregated Metrics
+
+```
+GET /api/metrics
+Headers: Authorization: Bearer <token>
+```
+
+Returns request count, average latency, and error count for all endpoints.
+
+```
+GET /api/metrics/by-tag
+Headers: Authorization: Bearer <token>
+```
+
+Returns aggregated metrics grouped by tags.
+
+```
+GET /api/metrics/window?from=2025-06-15T00:00:00Z&to=2025-06-19T23:59:59Z
+Headers: Authorization: Bearer <token>
+```
+
+Returns logs within a specific time range.
+
+---
+
+### ⚠️ Alerts
+
+```
+GET /api/alerts
+Headers: Authorization: Bearer <token>
+```
+
+Returns alerts triggered by:
+- High latency (over 300ms)
+- Server errors (status code 500+)
+
+---
+
+## 🧪 Testing the APIs
+
+You can use:
+- 🔁 Manual cURL requests
+- 📥 Postman (import `postman_collection.json`)
+
+Example:
+
+```bash
+curl -X POST http://localhost:3000/api/endpoints/register   -H "Authorization: Bearer <your_token>"   -H "Content-Type: application/json"   -d '{"name":"Payments","url":"https://example.com/pay","tags":["payment"]}'
+```
+
+---
+
+## 🔁 Rate Limiting
+
+Sensitive API routes are protected by a 5-requests-per-minute rate limit per IP.  
+Clients exceeding the limit will receive:
+
+```json
+{
+  "error": "Too many requests"
+}
+```
+
+---
+
+## 🌱 Seed the Database (Optional)
+
+Create a file at `scripts/seed.ts` and run it manually to add sample data.
+
+```ts
+await Endpoint.create([
+  {
+    name: "Test API",
+    url: "https://httpstat.us/200?sleep=50",
+    tags: ["test"]
+  }
+]);
+```
+
+Or just use the API to register and ping endpoints.
+
+---
+
+## 📌 Submission Details
+
+✅ Core features fully implemented  
+✅ Bonus features: alerting, tag grouping, rate limiting  
+✅ Modular and clean codebase  
+✅ Auth-protected endpoints  
+✅ Ready to test with Postman  
+✅ `.env` example and seed instructions included  
+
+---
