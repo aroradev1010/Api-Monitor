@@ -3,13 +3,15 @@ import { Endpoint } from "@/models/Endpoint";
 import { Log } from "@/models/Log";
 import { Alert } from "@/models/Alert";
 import { NextResponse } from "next/server";
+import { isRateLimited } from "@/lib/rateLimiter";
 
-export async function GET(
-  _req: Request,
-  context: { params: { id: string } }
-) {
+export async function GET(_req: Request, context: { params: { id: string } }) {
+  const ip = _req.headers.get("x-forwarded-for") || "unknown";
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   await connectDB();
-
   const { id } = context.params;
 
   const endpoint = await Endpoint.findById(id);
@@ -18,8 +20,7 @@ export async function GET(
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
+  const timeout = setTimeout(() => controller.abort(), 10000);
   let statusCode = 500;
   let latency = 0;
 
@@ -34,21 +35,17 @@ export async function GET(
   } catch (err: any) {
     latency = Date.now() - start;
     if (err.name === "AbortError") {
-      console.error("Request timed out.");
       await Alert.create({
         endpointId: endpoint._id,
         message: "Request timed out after 10s",
-        type: "latency",
         latency,
+        type: "latency",
       });
-    } else {
-      console.error(`Error pinging ${endpoint.url}`, err);
     }
   } finally {
     clearTimeout(timeout);
   }
 
-  // Trigger alerts if needed
   if (latency > 300) {
     await Alert.create({
       endpointId: endpoint._id,
@@ -67,7 +64,6 @@ export async function GET(
     });
   }
 
-  // Log the result
   await Log.create({
     endpointId: endpoint._id,
     latency,

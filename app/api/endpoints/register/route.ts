@@ -4,10 +4,15 @@ import { Log } from "@/models/Log";
 import { endpointSchema } from "@/lib/validate";
 import { NextRequest, NextResponse } from "next/server";
 import { Alert } from "@/models/Alert";
+import { isRateLimited } from "@/lib/rateLimiter";
 
 export async function POST(req: NextRequest) {
-  await connectDB();
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
+  await connectDB();
   const body = await req.json();
   const result = endpointSchema.safeParse(body);
 
@@ -16,14 +21,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { name, url, tags } = result.data;
-
-  // Save the endpoint
   const endpoint = await Endpoint.create({ name, url, tags });
 
-  // Ping with timeout
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
+  const timeout = setTimeout(() => controller.abort(), 10000);
   let statusCode = 500;
   let latency = 0;
 
@@ -38,21 +39,17 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     latency = Date.now() - start;
     if (err.name === "AbortError") {
-      console.error("Request timed out.");
       await Alert.create({
         endpointId: endpoint._id,
         message: "Request timed out after 10s",
-        type: "latency",
         latency,
+        type: "latency",
       });
-    } else {
-      console.error("Ping failed:", err);
     }
   } finally {
     clearTimeout(timeout);
   }
 
-  // Trigger alerts if needed
   if (latency > 300) {
     await Alert.create({
       endpointId: endpoint._id,
@@ -71,7 +68,6 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Log the result
   await Log.create({
     endpointId: endpoint._id,
     latency,

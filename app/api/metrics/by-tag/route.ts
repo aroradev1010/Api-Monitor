@@ -1,8 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { Endpoint } from "@/models/Endpoint";
-import { Log } from "@/models/Log";
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 
 export async function GET() {
   await connectDB();
