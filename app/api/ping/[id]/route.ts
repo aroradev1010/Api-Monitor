@@ -1,26 +1,22 @@
 import { connectDB } from "@/lib/db";
 import { Endpoint } from "@/models/Endpoint";
 import { Log } from "@/models/Log";
-import { endpointSchema } from "@/lib/validate";
-import { NextRequest, NextResponse } from "next/server";
 import { Alert } from "@/models/Alert";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function GET(
+  _req: Request,
+  context: { params: { id: string } }
+) {
   await connectDB();
 
-  const body = await req.json();
-  const result = endpointSchema.safeParse(body);
+  const { id } = context.params;
 
-  if (!result.success) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  const endpoint = await Endpoint.findById(id);
+  if (!endpoint) {
+    return NextResponse.json({ error: "Endpoint not found" }, { status: 404 });
   }
 
-  const { name, url, tags } = result.data;
-
-  // Save the endpoint
-  const endpoint = await Endpoint.create({ name, url, tags });
-
-  // Ping with timeout
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
@@ -29,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const start = Date.now();
   try {
-    const response = await fetch(url, {
+    const response = await fetch(endpoint.url, {
       method: "GET",
       signal: controller.signal,
     });
@@ -46,7 +42,7 @@ export async function POST(req: NextRequest) {
         latency,
       });
     } else {
-      console.error("Ping failed:", err);
+      console.error(`Error pinging ${endpoint.url}`, err);
     }
   } finally {
     clearTimeout(timeout);
@@ -78,5 +74,10 @@ export async function POST(req: NextRequest) {
     statusCode,
   });
 
-  return NextResponse.json(endpoint, { status: 201 });
+  return NextResponse.json({
+    endpoint: endpoint.url,
+    latency,
+    statusCode,
+    message: "Ping logged successfully",
+  });
 }
