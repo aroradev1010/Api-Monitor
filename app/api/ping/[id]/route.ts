@@ -1,3 +1,5 @@
+// app/api/ping/[id]/route.ts
+
 import { connectDB } from "@/lib/db";
 import { Endpoint } from "@/models/Endpoint";
 import { Log } from "@/models/Log";
@@ -20,7 +22,7 @@ export async function GET(_req: Request, context: { params: { id: string } }) {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
   let statusCode = 500;
   let latency = 0;
 
@@ -35,6 +37,7 @@ export async function GET(_req: Request, context: { params: { id: string } }) {
   } catch (err: any) {
     latency = Date.now() - start;
     if (err.name === "AbortError") {
+      // Timeout alert
       await Alert.create({
         endpointId: endpoint._id,
         message: "Request timed out after 10s",
@@ -46,6 +49,7 @@ export async function GET(_req: Request, context: { params: { id: string } }) {
     clearTimeout(timeout);
   }
 
+  // High latency alert
   if (latency > 300) {
     await Alert.create({
       endpointId: endpoint._id,
@@ -55,6 +59,7 @@ export async function GET(_req: Request, context: { params: { id: string } }) {
     });
   }
 
+  // Server error alert
   if (statusCode >= 500) {
     await Alert.create({
       endpointId: endpoint._id,
@@ -64,6 +69,7 @@ export async function GET(_req: Request, context: { params: { id: string } }) {
     });
   }
 
+  // Always create a new log
   await Log.create({
     endpointId: endpoint._id,
     latency,
