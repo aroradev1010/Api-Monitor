@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
     });
     latency = Date.now() - start;
     statusCode = response.status;
-  } catch (err: any) {
+  } catch (error) {
+    const err = error as Error;
     latency = Date.now() - start;
     if (err.name === "AbortError") {
       await Alert.create({
