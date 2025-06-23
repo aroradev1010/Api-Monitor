@@ -39,7 +39,6 @@ afterAll(async () => {
 
 describe("GET /api/ping/:id", () => {
   it("should log ping and return latency and statusCode", async () => {
-    console.log(token);
     const res = await request(baseURL)
       .get(`/api/ping/${endpointId}`)
       .set("Authorization", `Bearer ${token}`);
