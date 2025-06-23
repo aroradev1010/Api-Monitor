@@ -1,171 +1,134 @@
-# 🔍 API Performance Monitor – Internship Assignment (DevifyX)
+# API Performance Monitor
 
-A backend-only monitoring system that tracks latency, status codes, and errors of registered API endpoints. It provides metrics reports, alerting, rate limiting, and supports time-windowed queries.
-
-> ✅ Built using **Next.js App Router**, **TypeScript**, **MongoDB**, and **JWT-based Authentication**.
+A backend-only project to monitor the performance of registered API endpoints. Built using **Next.js API routes**, **Express-style handlers**, **MongoDB**, **JWT authentication**, and **Jest** for integration tests.
 
 ---
 
-## 📦 Tech Stack
+## 🚀 Features
 
-- **Runtime**: Node.js 18+
-- **Framework**: Next.js (App Router)
-- **Language**: TypeScript
-- **Database**: MongoDB + Mongoose
-- **Authentication**: JWT
-- **Rate Limiting**: IP-based, in-memory
-- **Validation**: Zod
-
----
-
-## 📐 API Documentation
-
-### 🔑 Auth
-
-```
-POST /api/auth/login
-```
-
-**Body:**
-```json
-{
-  "email": "admin@example.com",
-  "password": "password123"
-}
-```
-
-**Response:**
-```json
-{
-  "token": "<jwt_token>"
-}
-```
+* Register endpoints with tags
+* JWT-based authentication
+* Periodic pinging of endpoints
+* Metrics aggregation (by tag & time window)
+* Alerting on high latency or error
+* Fully tested with integration tests (Jest + Supertest)
 
 ---
 
-### 🧩 Register API Endpoint
+## 🛠️ Tech Stack
 
-```
-POST /api/endpoints/register
-Headers: Authorization: Bearer <token>
-```
-
-**Body:**
-```json
-{
-  "name": "User Service",
-  "url": "https://example.com/api/user",
-  "tags": ["user", "auth"]
-}
-```
-
-✅ Automatically pings the endpoint once on registration  
-✅ Logs the latency and status code  
-✅ Triggers alert if latency > 300ms or status >= 500
+* **Framework**: Next.js App Router (API routes)
+* **Database**: MongoDB (Mongoose ODM)
+* **Auth**: JWT with email-based login
+* **Testing**: Jest + Supertest (no mocks, real DB)
 
 ---
 
-### 📡 Ping an Endpoint
+## 📂 Project Structure
 
 ```
-GET /api/ping/:id
-Headers: Authorization: Bearer <token>
+.
+├── .jest
+|   ├── setEnvVar.js 
+├── app/api/
+│   ├── auth/token/route.ts
+│   ├── endpoints/register/route.ts
+│   ├── ping/[id]/route.ts
+│   ├── alerts/route.ts
+│   ├── metrics/
+│   │   ├── route.ts
+│   │   ├── by-tag/route.ts
+│   │   └── window/route.ts
+├── lib/
+│   ├── db.ts               # MongoDB connection
+│   ├── auth.ts             # JWT utils
+├── models/
+│   ├── Endpoint.ts
+│   ├── Log.ts
+│   └── Alert.ts
+├── tests/
+│   ├── setupTestServer.ts  # Shared server setup for all tests
+│   ├── ping.test.ts
+│   ├── alerts.test.ts
+│   ├── metrics.test.ts
+│   ├── registerEndpoint.test.ts
+│   └── auth.test.ts
+├── jest.config.js
+├── middleware.ts 
+└── README.md
 ```
-
-Triggers a request to the registered URL and logs latency and status code.
 
 ---
 
-### 📊 Aggregated Metrics
+## 🧪 Running Tests
 
-```
-GET /api/metrics
-Headers: Authorization: Bearer <token>
-```
+### 1. Add Environment Variables
 
-Returns request count, average latency, and error count for all endpoints.
+🛠️ Add your test environment variables directly inside .jest/setEnvVar.js:
 
-```
-GET /api/metrics/by-tag
-Headers: Authorization: Bearer <token>
+```js
+// setEnvVar.js
+process.env.MONGO_URI = "your_test_db_uri";
+process.env.JWT_SECRET = "testsecret";
 ```
 
-Returns aggregated metrics grouped by tags.
+> 🔐 Make sure you **do not commit** any real secrets. This is a local-only test file.
 
-```
-GET /api/metrics/window?from=2025-06-15T00:00:00Z&to=2025-06-19T23:59:59Z
-Headers: Authorization: Bearer <token>
-```
-
-Returns logs within a specific time range.
-
----
-
-### ⚠️ Alerts
-
-```
-GET /api/alerts
-Headers: Authorization: Bearer <token>
-```
-
-Returns alerts triggered by:
-- High latency (over 300ms)
-- Server errors (status code 500+)
-
----
-
-## 🧪 Testing the APIs
-
-You can use:
-- 🔁 Manual cURL requests
-- 📥 Postman (import `postman_collection.json`)
-
-Example:
+### 2. Run Tests
 
 ```bash
-curl -X POST http://localhost:3000/api/endpoints/register   -H "Authorization: Bearer <your_token>"   -H "Content-Type: application/json"   -d '{"name":"Payments","url":"https://example.com/pay","tags":["payment"]}'
+npm install
+npm test
 ```
 
----
+This will:
 
-## 🔁 Rate Limiting
-
-Sensitive API routes are protected by a 5-requests-per-minute rate limit per IP.  
-Clients exceeding the limit will receive:
-
-```json
-{
-  "error": "Too many requests"
-}
-```
+* Build the Next.js app
+* Run all Jest tests sequentially using a single shared build
 
 ---
 
-## 🌱 Seed the Database (Optional)
+## 🧪 Tested Routes
 
-Create a file at `scripts/seed.ts` and run it manually to add sample data.
-
-```ts
-await Endpoint.create([
-  {
-    name: "Test API",
-    url: "https://httpstat.us/200?sleep=50",
-    tags: ["test"]
-  }
-]);
-```
-
-Or just use the API to register and ping endpoints.
+| Route                          | Test Coverage  |
+| ------------------------------ | -------------- |
+| `POST /api/auth/token`         | ✅ Fully tested |
+| `POST /api/endpoints/register` | ✅ Fully tested |
+| `GET /api/ping/[id]`           | ✅ Fully tested |
+| `GET /api/alerts`              | ✅ Fully tested |
+| `GET /api/metrics`             | ✅ Fully tested |
+| `GET /api/metrics/by-tag`      | ✅ Fully tested |
+| `GET /api/metrics/window`      | ✅ Fully tested |
 
 ---
 
-## 📌 Submission Details
+## 🧾 Requirements
 
-✅ Core features fully implemented  
-✅ Bonus features: alerting, tag grouping, rate limiting  
-✅ Modular and clean codebase  
-✅ Auth-protected endpoints  
-✅ Ready to test with Postman  
-✅ `.env` example and seed instructions included  
+* Node.js 18+
+* MongoDB instance (local or Atlas)
+
+### Environment Variables Required
+
+| Key          | Purpose                   |
+| ------------ | ------------------------- |
+| `MONGO_URI`  | MongoDB connection string |
+| `JWT_SECRET` | Secret for signing tokens |
+
+Add these to:
+
+* `.env.local` — for local development
+* `setEnvVar.js` — for tests only (see above)
 
 ---
+
+## ✅ Final Notes
+
+* Clean architecture with modular folders
+* All core functionality covered by integration tests
+* No mocks, real DB interaction for accuracy
+
+Feel free to fork and extend this for full-stack monitoring tools!
+
+---
+
+🛠️ Built with ❤️ for the DevifyX Internship Assignment
