@@ -1,0 +1,278 @@
+{
+	"info": {
+		"_postman_id": "d813d8e0-eb52-4952-9b94-d410a1bf9096",
+		"name": "DevifyX API Performance Monitor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33469784"
+	},
+	"item": [
+		{
+			"name": "Get JWT Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"jwt_token\", pm.response.json().token);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"admin@example.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/auth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register New Endpoint",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"endpoint_id\", pm.response.json()._id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Blog\",\r\n  \"url\": \"https://infiniteideas-hub.vercel.app/\", \r\n  \"tags\": [\"blog\", \"user\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/endpoints/register",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ping Endpoint Manually",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/ping/{{endpoint_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"ping",
+						"{{endpoint_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Metrics → By Endpoint",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Postman-Token",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "Host",
+						"value": "<calculated when request is sent>",
+						"type": "text"
+					},
+					{
+						"key": "User-Agent",
+						"value": "PostmanRuntime/7.39.1",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "*/*",
+						"type": "text"
+					},
+					{
+						"key": "Accept-Encoding",
+						"value": "gzip, deflate, br",
+						"type": "text"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFyb3JhZGV2MTAxMEBnbWFpbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTA0NDEzODQsImV4cCI6MTc1MDQ0ODU4NH0.FV0WbRqMmeN1HduMZD9WWWbwi_c_7VzzLBHSw9YbMHQ",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/metrics",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"metrics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Metrics → By Tag",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/metrics/by-tag",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"metrics",
+						"by-tag"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Metrics → Time Window",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/metrics/window?from=2025-06-20T00:00:00Z&to=2025-07-20T23:59:59Z\n",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"metrics",
+						"window"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2025-06-20T00:00:00Z"
+						},
+						{
+							"key": "to",
+							"value": "2025-07-20T23:59:59Z\n"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Alerts → List",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/alerts",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"alerts"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
